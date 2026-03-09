@@ -1,0 +1,9 @@
+
+--- NEW REQUEST ---
+{"name":"Havelock 3","email":"havelock3@gmail.com","password":"1234"}
+assignedOwnerId initialized
+Condition: true Havelock 3 havelock3@gmail.com 1234
+ENTERED IF BLOCK
+userExists: false
+newUser created: 6999ead3402caf5f019d447f
+Final assignedOwnerId: 6999ead3402caf5f019d447f

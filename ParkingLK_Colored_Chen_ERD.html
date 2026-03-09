@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkingLK - Colored Theme Chen ER Diagram</title>
+    <!-- Importing Mermaid.js -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                lineColor: '#666666',
+                primaryTextColor: '#ffffff'
+            }
+        });
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            /* White background like the image */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .diagram-container {
+            background: #ffffff;
+            padding: 10px;
+            overflow: auto;
+            width: 100%;
+            height: 90vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+    %%{init: {'flowchart': {'curve': 'linear', 'nodeSpacing': 30, 'rankSpacing': 100}}}%%
+    flowchart TD
+        %% ENTITIES (Solid Teal)
+        Driver[Driver]
+        Booking[Booking]
+        CarPark[CarPark]
+        Slot[Slot]
+        Payment[Payment]
+        Vehicle[Vehicle]
+        
+        %% RELATIONSHIPS (Solid Dark Blue)
+        Registers{Registers}
+        Places{Places}
+        PaysFor{Pays}
+        LocatedIn{Located}
+        BookedFor{BookedFor}
+        HasSlots{Has}
+        
+        %% DRIVER ATTRIBUTES (Solid Burgundy/Red)
+        D_ID([<u>DriverID</u>])
+        D_Name([Name])
+        D_Email([Email])
+        D_Phone([Phone])
+        
+        %% VEHICLE ATTRIBUTES
+        V_ID([<u>VehicleID</u>])
+        V_Plate([LicensePlate])
+        V_Type([Type])
+        
+        %% BOOKING ATTRIBUTES
+        B_ID([<u>BookingID</u>])
+        B_Start([StartTime])
+        B_End([EndTime])
+        B_Total([TotalAmount])
+        
+        %% PAYMENT ATTRIBUTES
+        P_ID([<u>PaymentID</u>])
+        P_Status([Status])
+        
+        %% CARPARK ATTRIBUTES
+        C_ID([<u>CarParkID</u>])
+        C_Name([Name])
+        C_Loc([Location])
+        C_EVFee([EV_Fee])
+        
+        %% SLOT ATTRIBUTES
+        S_ID([<u>SlotID</u>])
+        S_Num([SlotNumber])
+        S_LocType([LocationType])
+
+        %% CONNECTIONS
+        D_ID --- Driver
+        D_Name --- Driver
+        D_Email --- Driver
+        D_Phone --- Driver
+        
+        Driver ---|1| Registers ---|N| Vehicle
+        V_ID --- Vehicle
+        V_Plate --- Vehicle
+        V_Type --- Vehicle
+
+        %% Driver Directly Places Booking
+        Driver ---|1| Places ---|N| Booking
+        
+        B_ID --- Booking
+        B_Start --- Booking
+        B_End --- Booking
+        B_Total --- Booking
+        
+        Booking ---|1| PaysFor ---|1| Payment
+        P_ID --- Payment
+        P_Status --- Payment
+        
+        Booking ---|N| LocatedIn ---|1| CarPark
+        C_ID --- CarPark
+        C_Name --- CarPark
+        C_Loc --- CarPark
+        C_EVFee --- CarPark
+        
+        CarPark ---|1| HasSlots ---|N| Slot
+        S_ID --- Slot
+        S_Num --- Slot
+        S_LocType --- Slot
+        Booking ---|1| BookedFor ---|1| Slot
+
+        %% STYLING CLASSES MATCHING IMAGE
+        %% Entity: Solid Teal fill, no border, white text
+        classDef entity fill:#00b8c4,stroke:none,color:#ffffff,font-weight:bold;
+        
+        %% Relationship: Solid Dark Blue fill, no border, white text
+        classDef relationship fill:#005b82,stroke:none,color:#ffffff,font-weight:bold;
+        
+        %% Attribute: Solid Burgundy/Magenta fill, no border, white text
+        classDef attribute fill:#bc104c,stroke:none,color:#ffffff,font-weight:bold;
+        
+        %% Key Attribute: Same fill but underlined text naturally handled by HTML tag
+        classDef keyAttribute fill:#bc104c,stroke:none,color:#ffffff,font-weight:bold;
+        
+        %% APPLYING CLASSES
+        class Driver,Booking,CarPark,Slot,Payment,Vehicle entity;
+        
+        class Places,PaysFor,LocatedIn,BookedFor,HasSlots,Registers relationship;
+        
+        class D_Name,D_Email,D_Phone,V_Plate,V_Type,B_Start,B_End,P_Status,C_Name,C_Loc,C_EVFee,S_Num,S_LocType,B_Total attribute;
+        class D_ID,V_ID,B_ID,P_ID,C_ID,S_ID keyAttribute;
+    </pre>
+    </div>
+
+</body>
+
+</html>

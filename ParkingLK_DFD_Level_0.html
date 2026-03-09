@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkingLK - Level 0 DFD</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #eef2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        svg {
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        text {
+            fill: #222;
+        }
+
+        .box {
+            fill: #fff;
+            stroke: #222;
+            stroke-width: 1.5px;
+        }
+
+        .circle {
+            fill: #fff;
+            stroke: #222;
+            stroke-width: 1.5px;
+        }
+
+        .line {
+            stroke: #555;
+            stroke-width: 1.2px;
+        }
+
+        .system-text {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .entity-text {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .label-text {
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <svg width="1200" height="900" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#555" />
+            </marker>
+        </defs>
+
+        <!-- Process - ParkingLK System -->
+        <circle cx="600" cy="450" r="140" class="circle" />
+        <text x="600" y="440" class="system-text" text-anchor="middle">ParkingLK</text>
+        <text x="600" y="465" class="system-text" text-anchor="middle">Web System</text>
+        <text x="600" y="410" style="font-size: 12px; fill: #666;" text-anchor="middle">0</text>
+
+        <!-- Left Entity - Driver -->
+        <rect x="50" y="410" width="160" height="80" class="box" />
+        <text x="130" y="455" class="entity-text" text-anchor="middle">Driver</text>
+
+        <!-- Right Entity - Admin -->
+        <rect x="990" y="410" width="160" height="80" class="box" />
+        <text x="1070" y="455" class="entity-text" text-anchor="middle">Super Admin</text>
+
+        <!-- Top Entity - Owner -->
+        <rect x="520" y="50" width="160" height="80" class="box" />
+        <text x="600" y="95" class="entity-text" text-anchor="middle">Car Park Owner</text>
+
+        <!-- Bottom Entity - Attendant -->
+        <rect x="520" y="770" width="160" height="80" class="box" />
+        <text x="600" y="815" class="entity-text" text-anchor="middle">Attendant</text>
+
+
+        <!-- Flows: Driver (Left) <-> System -->
+        <!-- In -->
+        <line x1="210" y1="360" x2="480" y2="360" class="line" marker-end="url(#arrowhead)" />
+        <text x="340" y="354" class="label-text" text-anchor="middle">Login / Register</text>
+
+        <line x1="210" y1="390" x2="460" y2="390" class="line" marker-end="url(#arrowhead)" />
+        <text x="340" y="384" class="label-text" text-anchor="middle">Search Location &amp; Filter</text>
+
+        <line x1="210" y1="420" x2="450" y2="420" class="line" marker-end="url(#arrowhead)" />
+        <text x="340" y="414" class="label-text" text-anchor="middle">Booking Details / Payment Info</text>
+
+        <line x1="210" y1="450" x2="445" y2="450" class="line" marker-end="url(#arrowhead)" />
+        <text x="340" y="444" class="label-text" text-anchor="middle">Cancellation / Update Requests</text>
+
+        <!-- Out -->
+        <line x1="475" y1="480" x2="210" y2="480" class="line" marker-end="url(#arrowhead)" />
+        <text x="340" y="474" class="label-text" text-anchor="middle">Available Slots &amp; Prices</text>
+
+        <line x1="485" y1="510" x2="210" y2="510" class="line" marker-end="url(#arrowhead)" />
+        <text x="340" y="504" class="label-text" text-anchor="middle">Booking Confirmation (QR E-Ticket)</text>
+
+        <line x1="505" y1="540" x2="210" y2="540" class="line" marker-end="url(#arrowhead)" />
+        <text x="340" y="534" class="label-text" text-anchor="middle">Real-time Booking &amp; Refund Status</text>
+
+
+        <!-- Flows: Admin (Right) <-> System -->
+        <!-- In -->
+        <line x1="990" y1="410" x2="745" y2="410" class="line" marker-end="url(#arrowhead)" />
+        <text x="865" y="404" class="label-text" text-anchor="middle">Login Credentials</text>
+
+        <line x1="990" y1="440" x2="750" y2="440" class="line" marker-end="url(#arrowhead)" />
+        <text x="865" y="434" class="label-text" text-anchor="middle">Manage System Data / Users</text>
+
+        <!-- Out -->
+        <line x1="750" y1="470" x2="990" y2="470" class="line" marker-end="url(#arrowhead)" />
+        <text x="865" y="464" class="label-text" text-anchor="middle">Monitor All User Activities</text>
+
+        <line x1="745" y1="500" x2="990" y2="500" class="line" marker-end="url(#arrowhead)" />
+        <text x="865" y="494" class="label-text" text-anchor="middle">View and Manage Revenue</text>
+
+
+        <!-- Flows: Owner (Top) <-> System -->
+        <!-- In -->
+        <line x1="550" y1="130" x2="550" y2="310" class="line" marker-end="url(#arrowhead)" />
+        <text transform="translate(545, 220) rotate(-90)" class="label-text" text-anchor="middle">Register &amp; log
+            in</text>
+
+        <line x1="580" y1="130" x2="580" y2="302" class="line" marker-end="url(#arrowhead)" />
+        <text transform="translate(575, 220) rotate(-90)" class="label-text" text-anchor="middle">Add/Manage Car
+            Parks</text>
+
+        <line x1="610" y1="130" x2="610" y2="301" class="line" marker-end="url(#arrowhead)" />
+        <text transform="translate(605, 220) rotate(-90)" class="label-text" text-anchor="middle">Update
+            Pricing/Availability</text>
+
+        <!-- Out -->
+        <line x1="640" y1="326" x2="640" y2="130" class="line" marker-end="url(#arrowhead)" />
+        <text transform="translate(635, 220) rotate(-90)" class="label-text" text-anchor="middle">Booking
+            Notifications</text>
+
+        <line x1="670" y1="339" x2="670" y2="130" class="line" marker-end="url(#arrowhead)" />
+        <text transform="translate(665, 220) rotate(-90)" class="label-text" text-anchor="middle">Revenue &amp;
+            Occupancy Reports</text>
+
+
+        <!-- Flows: Attendant (Bottom) <-> System -->
+        <!-- In -->
+        <line x1="550" y1="770" x2="550" y2="590" class="line" marker-end="url(#arrowhead)" />
+        <text transform="translate(545, 680) rotate(-90)" class="label-text" text-anchor="middle">Login
+            Credentials</text>
+
+        <line x1="590" y1="770" x2="590" y2="599" class="line" marker-end="url(#arrowhead)" />
+        <text transform="translate(585, 680) rotate(-90)" class="label-text" text-anchor="middle">QR E-Ticket
+            Validations</text>
+
+        <!-- Out -->
+        <line x1="630" y1="596" x2="630" y2="770" class="line" marker-end="url(#arrowhead)" />
+        <text transform="translate(625, 680) rotate(-90)" class="label-text" text-anchor="middle">Booking Validity
+            Status</text>
+
+        <line x1="670" y1="581" x2="670" y2="770" class="line" marker-end="url(#arrowhead)" />
+        <text transform="translate(665, 680) rotate(-90)" class="label-text" text-anchor="middle">Assigned Car Park
+            Info</text>
+
+    </svg>
+
+</body>
+
+</html>

@@ -1,0 +1,7 @@
+Found 3 non-available slots:
+- Slot P1 is reserved
+  -> No booking found for this slot!
+- Slot P2 is reserved
+  -> Latest Booking: status=completed, start=2/21/2026, 4:15:00 PM, end=2/21/2026, 11:15:00 PM
+- Slot P10 is reserved
+  -> No booking found for this slot!

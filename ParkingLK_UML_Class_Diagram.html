@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkingLK - UML Class Diagram</title>
+    <!-- Importing Mermaid.js to render the UML diagram -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#ffccff', /* Pink headers just like the image */
+                primaryTextColor: '#000000',
+                primaryBorderColor: '#000000',
+                lineColor: '#000000',
+                tertiaryColor: '#ffffff' /* White background for class bodies */
+            },
+            classDiagram: {
+                spacingNodeNode: 60,
+                spacingRankNode: 80,
+                curve: 'linear'
+            },
+            flowchart: {
+                curve: 'linear'
+            }
+        });
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #2b2b2b;
+            /* Dark background to make the diagram pop */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .diagram-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            overflow: auto;
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+    %%{init: {'flowchart': {'curve': 'stepAfter'}, 'theme': 'base', 'themeVariables': { 'primaryColor': '#ffccff', 'primaryTextColor': '#000000', 'primaryBorderColor': '#000000', 'lineColor': '#000000', 'tertiaryColor': '#ffffff'}}}%%
+    classDiagram
+        class User {
+            +String userID
+            +String name
+            +String email
+            +String password
+            +String role
+            +String phone
+            +Date createdAt
+            +login() boolean
+            +logout() void
+            +register() void
+            +updateProfile() void
+        }
+
+        class SuperAdmin {
+            +manageUsers() void
+            +manageCarParks() void
+            +managePlatformSettings() void
+        }
+
+        class Owner {
+            +addCarPark() void
+            +updateCarParkDetails() void
+            +viewRevenueReports() void
+            +manageSlots() void
+        }
+
+        class Driver {
+            +searchCarParks() array
+            +makeBooking() void
+            +cancelBooking() void
+            +manageVehicles() void
+        }
+
+        class Attendant {
+            +scanQRTicket() boolean
+            +validateBooking() void
+            +markArrival() void
+            +markNoShow() void
+        }
+
+        class Vehicle {
+            +String vehicleID
+            +String driverID
+            +String licensePlate
+            +String type
+            +addVehicle() void
+            +removeVehicle() void
+        }
+
+        class CarPark {
+            +String carParkID
+            +String ownerID
+            +String name
+            +String address
+            +Float latitude
+            +Float longitude
+            +Float basePrice
+            +Float evChargingFee
+            +Int totalSlots
+            +Int availableSlots
+            +updatePricing() float
+        }
+
+        class Slot {
+            +String slotID
+            +String carParkID
+            +String slotNumber
+            +String status
+            +String locationType
+            +Array vehicleTypes
+        }
+
+        class Booking {
+            +String bookingID
+            +String driverID
+            +String carParkID
+            +String vehicleID
+            +DateTime startTime
+            +DateTime endTime
+            +Float totalAmount
+            +String status
+            +String qrCode
+            +createBooking() void
+            +updateStatus() void
+        }
+
+        class Payment {
+            +String paymentID
+            +String bookingID
+            +Float amount
+            +String status
+            +String paymentMethod
+            +DateTime transactionDate
+            +processPayment() boolean
+            +issueRefund() boolean
+        }
+
+        %% Inheritance Relationships
+        User <|-- SuperAdmin
+        User <|-- Owner
+        User <|-- Driver
+        User <|-- Attendant
+
+        %% Associations & Multiplicities
+        Driver "1" -- "*" Vehicle : registers
+        Driver "1" -- "*" Booking : places
+        Owner "1" -- "*" CarPark : manages
+        CarPark "1" -- "*" Slot : contains
+        Slot "1" -- "*" Booking : booked for
+        CarPark "1" -- "*" Booking : receives
+        Booking "*" -- "1" Vehicle : contains
+        Booking "1" -- "1" Payment : contains
+        Attendant "*" -- "1" CarPark : assigned to
+    </pre>
+    </div>
+
+</body>
+
+</html>
