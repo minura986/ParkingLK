@@ -44,7 +44,7 @@ export const registerUser = async (req, res) => {
             name,
             email,
             password,
-            role: role || 'user', // Default to user if not provided
+            role: role || 'user',
             phone,
             vehicle_details,
             profile_picture: profile_picture || ''
@@ -58,6 +58,46 @@ export const registerUser = async (req, res) => {
                 role: user.role,
                 profile_picture: user.profile_picture,
                 token: generateToken(res, user._id),
+            });
+        } else {
+            res.status(400).json({ message: 'Invalid user data' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Admin create a new user
+// @route   POST /api/users/admin
+// @access  Private/SuperAdmin
+export const adminCreateUser = async (req, res) => {
+    const { name, email, password, role, phone, vehicle_details, profile_picture } = req.body;
+
+    try {
+        const userExists = await User.findOne({ email });
+
+        if (userExists) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        const user = await User.create({
+            name,
+            email,
+            password,
+            role: role || 'user',
+            phone,
+            vehicle_details,
+            profile_picture: profile_picture || ''
+        });
+
+        if (user) {
+            res.status(201).json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                profile_picture: user.profile_picture,
+                message: 'User created successfully'
             });
         } else {
             res.status(400).json({ message: 'Invalid user data' });

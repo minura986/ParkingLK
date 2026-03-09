@@ -206,8 +206,8 @@ const MyBookings = () => {
 
                                         {/* Colored Left Border Indicator */}
                                         <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${booking.booking_status === 'active' ? 'bg-green-500' :
-                                                booking.booking_status === 'upcoming' ? 'bg-blue-500' :
-                                                    booking.booking_status === 'completed' ? 'bg-gray-400' : 'bg-red-500'
+                                            booking.booking_status === 'upcoming' ? 'bg-blue-500' :
+                                                booking.booking_status === 'completed' ? 'bg-gray-400' : 'bg-red-500'
                                             }`}></div>
 
                                         {/* Left Status & Location */}
@@ -293,8 +293,8 @@ const MyBookings = () => {
                                 {filteredBookings.map((booking) => (
                                     <div key={booking._id} className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col sm:flex-row relative">
                                         <div className={`absolute top-0 left-0 right-0 h-1.5 ${booking.booking_status === 'active' ? 'bg-green-500' :
-                                                booking.booking_status === 'upcoming' ? 'bg-blue-500' :
-                                                    booking.booking_status === 'completed' ? 'bg-gray-400' : 'bg-red-500'
+                                            booking.booking_status === 'upcoming' ? 'bg-blue-500' :
+                                                booking.booking_status === 'completed' ? 'bg-gray-400' : 'bg-red-500'
                                             }`}></div>
 
                                         {/* Left Side: Booking Details */}

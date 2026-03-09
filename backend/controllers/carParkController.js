@@ -37,7 +37,6 @@ export const getCarParkById = async (req, res) => {
 
         let currentPrice = carPark.price_per_hour;
 
-        // Calculate dynamic pricing if enabled
         if (carPark.dynamic_pricing_enabled) {
             const ParkingSlot = (await import('../models/ParkingSlot.js')).default;
             const totalSlotsCount = await ParkingSlot.countDocuments({ car_park: carPark._id });
@@ -49,18 +48,15 @@ export const getCarParkById = async (req, res) => {
             if (totalSlotsCount > 0) {
                 const occupancyRate = occupiedSlotsCount / totalSlotsCount;
 
-                // Peak: > 75% occupancy
                 if (occupancyRate > 0.75) {
                     currentPrice = currentPrice * carPark.peak_multiplier;
                 }
-                // Off-peak: < 25% occupancy (optional, we can use off_peak_multiplier)
                 else if (occupancyRate < 0.25) {
                     currentPrice = currentPrice * carPark.off_peak_multiplier;
                 }
             }
         }
 
-        // Attach the calculated dynamic price
         carPark.dynamic_price_per_hour = Math.round(currentPrice);
 
         res.json(carPark);
@@ -76,24 +72,20 @@ export const createCarPark = async (req, res) => {
     const {
         name, address, coordinates, total_slots, price_per_hour, amenities, description,
         dynamic_pricing_enabled, peak_multiplier, off_peak_multiplier, ev_charging_fee,
-        owner_account // New optional payload for owner creation
+        owner_account
     } = req.body;
 
     try {
         let assignedOwnerId = req.user._id;
 
-        // If the Super Admin provided an existing owner ID, verify and use it
         if (req.body.existing_owner_id) {
             const existingUser = await User.findById(req.body.existing_owner_id);
             if (!existingUser) {
                 return res.status(404).json({ message: 'The selected existing owner does not exist.' });
             }
             assignedOwnerId = existingUser._id;
-
-            // Note: If they weren't a car_owner before, we might want to upgrade them. 
-            // For now, we assume the frontend only sends valid car_owners.
         }
-        // Otherwise, if they provided owner_account details, create the user first
+
         else if (owner_account && owner_account.name && owner_account.email && owner_account.password) {
             const userExists = await User.findOne({ email: owner_account.email });
 
@@ -105,8 +97,8 @@ export const createCarPark = async (req, res) => {
                 const newUser = await User.create({
                     name: owner_account.name,
                     email: owner_account.email,
-                    password: owner_account.password, // Will be hashed by pre-save middleware
-                    role: 'car_owner' // Force role to car_owner
+                    password: owner_account.password,
+                    role: 'car_owner'
                 });
                 assignedOwnerId = newUser._id;
             } catch (err) {
@@ -121,7 +113,7 @@ export const createCarPark = async (req, res) => {
             address,
             location: {
                 type: 'Point',
-                coordinates: coordinates, // [long, lat]
+                coordinates: coordinates,
             },
             total_slots,
             price_per_hour,
@@ -248,7 +240,6 @@ export const addAttendant = async (req, res) => {
             return res.status(404).json({ message: 'Car park not found' });
         }
 
-        // Ensure user is the owner or super_admin
         if (carPark.owner.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
             return res.status(403).json({ message: 'Not authorized to add attendants to this car park' });
         }
@@ -259,7 +250,6 @@ export const addAttendant = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Create the new attendant user
         const attendantUser = await User.create({
             name,
             email,
@@ -267,7 +257,6 @@ export const addAttendant = async (req, res) => {
             role: 'attendant'
         });
 
-        // Add to car park's attendants array
         carPark.attendants.push(attendantUser._id);
         await carPark.save();
 
@@ -296,7 +285,6 @@ export const getAttendants = async (req, res) => {
             return res.status(404).json({ message: 'Car park not found' });
         }
 
-        // Ensure user is the owner or super_admin
         if (carPark.owner.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
             return res.status(403).json({ message: 'Not authorized to view attendants for this car park' });
         }
@@ -318,18 +306,18 @@ export const removeAttendant = async (req, res) => {
             return res.status(404).json({ message: 'Car park not found' });
         }
 
-        // Ensure user is the owner or super_admin
+
         if (carPark.owner.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
             return res.status(403).json({ message: 'Not authorized to remove attendants from this car park' });
         }
 
-        // Remove from the array
+
         carPark.attendants = carPark.attendants.filter(
             (attendantId) => attendantId.toString() !== req.params.attendantId
         );
         await carPark.save();
 
-        // Optionally delete the User account from the db
+
         await User.findByIdAndDelete(req.params.attendantId);
 
         res.json({ message: 'Attendant removed' });

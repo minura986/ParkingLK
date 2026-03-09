@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
         },
         vehicle_details: {
             license_plate: String,
-            vehicle_type: String, // car, suv, van, bike
+            vehicle_type: String,
         }
     },
     { timestamps: true }

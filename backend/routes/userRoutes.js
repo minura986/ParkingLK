@@ -6,7 +6,8 @@ import {
     updateUserProfile,
     getUsers,
     deleteUser,
-    updateUserRole
+    updateUserRole,
+    adminCreateUser
 } from '../controllers/userController.js';
 import { protect, superAdmin } from '../middleware/authMiddleware.js';
 
@@ -15,6 +16,9 @@ const router = express.Router();
 router.route('/')
     .post(registerUser)
     .get(protect, superAdmin, getUsers);
+
+router.route('/admin')
+    .post(protect, superAdmin, adminCreateUser);
 
 router.post('/login', authUser);
 

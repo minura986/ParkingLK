@@ -18,26 +18,22 @@ export const getCarParkSlots = async (req, res) => {
 // @access  Private/Owner/Admin
 export const addSlotToCarPark = async (req, res) => {
     const {
-        slot_number, location_type, vehicle_types, // Single entry props 
-        prefix, start_number, end_number // Bulk entry props
+        slot_number, location_type, vehicle_types,
+        prefix, start_number, end_number
     } = req.body;
     const carparkId = req.params.carparkId;
 
     try {
-        // Verify car park exists
         const carPark = await CarPark.findById(carparkId);
         if (!carPark) {
             return res.status(404).json({ message: 'Car park not found' });
         }
 
-        // Enforce strict ownership: Only Super Admin and the actual assigned Owner can add slots
         if (req.user.role !== 'super_admin' && carPark.owner.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'Forbidden: You do not have permission to manage slots for this Car Park.' });
         }
 
-        // Determine if it's a bulk insert or single insert
         if (prefix !== undefined && start_number !== undefined && end_number !== undefined) {
-            // BULK INSERT
             const start = parseInt(start_number);
             const end = parseInt(end_number);
 
@@ -56,21 +52,16 @@ export const addSlotToCarPark = async (req, res) => {
             }
 
             try {
-                // ordered: false allows it to insert non-duplicates even if some exist
                 const createdSlots = await ParkingSlot.insertMany(slotsToInsert, { ordered: false });
                 return res.status(201).json(createdSlots);
             } catch (bulkError) {
-                // Check if it's purely a duplicate key error
                 if (bulkError.code === 11000 || (bulkError.writeErrors && bulkError.writeErrors[0].code === 11000)) {
-                    // Even if ordered: false throws, some might have been inserted. Return 207 Multi-Status or a 400.
-                    // For simplicity, return 400 with a warning message.
                     return res.status(400).json({ message: 'Warning: One or more slots in that range already exist.' });
                 }
-                throw bulkError; // re-throw if it's some other db error
+                throw bulkError;
             }
 
         } else {
-            // SINGLE INSERT (fallback)
             if (!slot_number) {
                 return res.status(400).json({ message: 'Please provide either slot_number OR prefix/start_number/end_number' });
             }
@@ -111,7 +102,6 @@ export const deleteSlot = async (req, res) => {
             return res.status(404).json({ message: 'Car park not found' });
         }
 
-        // Enforce strict ownership: Only Super Admin and the actual assigned Owner can delete slots
         if (req.user.role !== 'super_admin' && carPark.owner.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'Forbidden: You do not have permission to manage slots for this Car Park.' });
         }
@@ -137,13 +127,11 @@ export const updateSlot = async (req, res) => {
             return res.status(404).json({ message: 'Slot not found' });
         }
 
-        // Verify car park exists
         const carPark = await CarPark.findById(req.params.carparkId);
         if (!carPark) {
             return res.status(404).json({ message: 'Car park not found' });
         }
 
-        // Enforce strict ownership: Only Super Admin and the actual assigned Owner can update slots
         if (req.user.role !== 'super_admin' && carPark.owner.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'Forbidden: You do not have permission to manage slots for this Car Park.' });
         }

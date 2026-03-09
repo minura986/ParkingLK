@@ -15,6 +15,44 @@ const ManageUsers = () => {
     const [message, setMessage] = useState(null);
     const [error, setError] = useState(null);
 
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [createFormData, setCreateFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        role: 'user',
+        phone: ''
+    });
+    const [createLoading, setCreateLoading] = useState(false);
+
+    const handleCreateInputChange = (e) => {
+        setCreateFormData({ ...createFormData, [e.target.name]: e.target.value });
+    };
+
+    const handleCreateUser = async (e) => {
+        e.preventDefault();
+        setCreateLoading(true);
+        try {
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${user.token}`,
+                },
+            };
+            await axios.post('/api/users/admin', createFormData, config);
+            setMessage('User created successfully.');
+            setShowCreateModal(false);
+            setCreateFormData({ name: '', email: '', password: '', role: 'user', phone: '' });
+            fetchUsers();
+            setTimeout(() => setMessage(null), 3000);
+        } catch (error) {
+            setError(error.response && error.response.data.message ? error.response.data.message : error.message);
+            setTimeout(() => setError(null), 3000);
+        } finally {
+            setCreateLoading(false);
+        }
+    };
+
     const fetchUsers = async () => {
         try {
             const config = {
@@ -78,7 +116,7 @@ const ManageUsers = () => {
     return (
         <AdminLayout title="Manage Users" role="super_admin">
             <div className="bg-white shadow rounded-t-none border-t-[3px] border-[#3C8DBC] overflow-hidden">
-                <div className="border-b border-gray-100 p-4">
+                <div className="border-b border-gray-100 p-4 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-gray-900">
                         {roleFilter === 'user' && 'Users'}
                         {roleFilter === 'car_owner' && 'Car Owners'}
@@ -86,6 +124,12 @@ const ManageUsers = () => {
                         {roleFilter === 'super_admin' && 'Super Admins'}
                         {!roleFilter && 'All Users'}
                     </h2>
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="bg-[#3C8DBC] text-white px-4 py-2 rounded shadow hover:bg-[#2A6B90] transition-colors text-sm"
+                    >
+                        + Create User
+                    </button>
                 </div>
 
                 {message && <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 m-4" role="alert">{message}</div>}
@@ -143,6 +187,90 @@ const ManageUsers = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Create User Modal */}
+            {showCreateModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+                        <h3 className="text-lg font-bold mb-4 text-gray-900">Create New User</h3>
+                        <form onSubmit={handleCreateUser}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700">Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    required
+                                    value={createFormData.name}
+                                    onChange={handleCreateInputChange}
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#3C8DBC] focus:border-[#3C8DBC] sm:text-sm"
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700">Email</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    required
+                                    value={createFormData.email}
+                                    onChange={handleCreateInputChange}
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#3C8DBC] focus:border-[#3C8DBC] sm:text-sm"
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700">Password</label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    required
+                                    value={createFormData.password}
+                                    onChange={handleCreateInputChange}
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#3C8DBC] focus:border-[#3C8DBC] sm:text-sm"
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700">Role</label>
+                                <select
+                                    name="role"
+                                    value={createFormData.role}
+                                    onChange={handleCreateInputChange}
+                                    className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#3C8DBC] focus:border-[#3C8DBC] sm:text-sm"
+                                >
+                                    <option value="user">User</option>
+                                    <option value="car_owner">Car Owner</option>
+                                    <option value="attendant">Attendant</option>
+                                    <option value="super_admin">Super Admin</option>
+                                </select>
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700">Phone (Optional)</label>
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    value={createFormData.phone}
+                                    onChange={handleCreateInputChange}
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#3C8DBC] focus:border-[#3C8DBC] sm:text-sm"
+                                />
+                            </div>
+                            <div className="flex justify-end space-x-3 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCreateModal(false)}
+                                    className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3C8DBC]"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={createLoading}
+                                    className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#3C8DBC] text-base font-medium text-white hover:bg-[#2A6B90] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3C8DBC] sm:text-sm disabled:opacity-50"
+                                >
+                                    {createLoading ? 'Creating...' : 'Create User'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 };

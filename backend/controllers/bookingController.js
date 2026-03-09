@@ -11,7 +11,6 @@ export const createBooking = async (req, res) => {
     const { car_park, slot, start_time, end_time, total_amount } = req.body;
 
     try {
-        // 1. Verify slot is actually available (Basic check, robust systems need time overlap checks)
         const slotDoc = await ParkingSlot.findById(slot);
         if (!slotDoc || slotDoc.status !== 'available') {
             return res.status(400).json({ message: 'Slot is not currently available' });
@@ -28,11 +27,9 @@ export const createBooking = async (req, res) => {
 
         const createdBooking = await booking.save();
 
-        // 2. Temporarily mark slot as reserved pending payment
         slotDoc.status = 'reserved';
         await slotDoc.save();
 
-        // 3. Trigger Socket.io event here to update map in real-time
         const updatedCarPark = await CarPark.findById(car_park).select('-owner -admins');
         io.emit('carParkUpdated', updatedCarPark);
 
@@ -84,7 +81,6 @@ export const getMyBookings = async (req, res) => {
             }
             const bObj = booking.toObject();
 
-            // Retroactively calculate for older completed bookings without extra_charges_time
             if (bObj.booking_status === 'completed' && bObj.extra_charges > 0 && !bObj.extra_charges_time && bObj.actual_exit_time) {
                 const extraTimeMs = new Date(bObj.actual_exit_time) - new Date(bObj.end_time);
                 bObj.extra_charges_time = Math.floor(extraTimeMs / (1000 * 60));
@@ -139,7 +135,6 @@ export const getOwnerBookings = async (req, res) => {
             }
             const bObj = booking.toObject();
 
-            // Retroactively calculate for older completed bookings without extra_charges_time
             if (bObj.booking_status === 'completed' && bObj.extra_charges > 0 && !bObj.extra_charges_time && bObj.actual_exit_time) {
                 const extraTimeMs = new Date(bObj.actual_exit_time) - new Date(bObj.end_time);
                 bObj.extra_charges_time = Math.floor(extraTimeMs / (1000 * 60));
@@ -184,8 +179,6 @@ export const getAllBookings = async (req, res) => {
                 }
             }
             const bObj = booking.toObject();
-
-            // Retroactively calculate for older completed bookings without extra_charges_time
             if (bObj.booking_status === 'completed' && bObj.extra_charges > 0 && !bObj.extra_charges_time && bObj.actual_exit_time) {
                 const extraTimeMs = new Date(bObj.actual_exit_time) - new Date(bObj.end_time);
                 bObj.extra_charges_time = Math.floor(extraTimeMs / (1000 * 60));
@@ -223,15 +216,13 @@ export const updateBookingStatus = async (req, res) => {
         if (payment_status) booking.payment_status = payment_status;
 
         const updatedBooking = await booking.save();
-
-        // If status changed to completed or cancelled, free the slot
         if (booking_status === 'completed' || booking_status === 'cancelled') {
             const slot = await ParkingSlot.findById(booking.slot);
             if (slot && slot.status !== 'available') {
                 slot.status = 'available';
                 await slot.save();
 
-                // Emit event to update map for all viewers
+
                 const updatedCarPark = await CarPark.findById(booking.car_park).select('-owner -admins');
                 if (updatedCarPark) {
                     io.emit('carParkUpdated', updatedCarPark);
@@ -239,7 +230,7 @@ export const updateBookingStatus = async (req, res) => {
             }
         }
 
-        // Populate fields to return the updated booking properly
+
         const populatedBooking = await Booking.findById(updatedBooking._id)
             .populate('user', 'name email phone')
             .populate('car_park', 'name address price_per_hour')
@@ -262,7 +253,7 @@ export const cancelBooking = async (req, res) => {
             return res.status(404).json({ message: 'Booking not found' });
         }
 
-        // Verify user owns the booking
+
         if (booking.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
             return res.status(403).json({ message: 'Not authorized to cancel this booking' });
         }
@@ -289,30 +280,30 @@ export const cancelBooking = async (req, res) => {
 
         booking.booking_status = 'cancelled';
         if (refundPercentage > 0) {
-            booking.payment_status = 'refunded'; // Simplified for now
+            booking.payment_status = 'refunded';
         }
         await booking.save();
 
-        // Free up the slot
+
         const slot = await ParkingSlot.findById(booking.slot);
         if (slot) {
             slot.status = 'available';
             await slot.save();
 
-            // Emit event to update map for all viewers
+
             const updatedCarPark = await CarPark.findById(booking.car_park).select('-owner -admins');
             if (updatedCarPark) {
                 io.emit('carParkUpdated', updatedCarPark);
             }
         }
 
-        // Notify user via Socket.io
+
         io.to(booking.user.toString()).emit('bookingUpdated', {
             bookingId: booking._id,
             status: booking.booking_status
         });
 
-        // Send Email Notification
+
         await sendEmail({
             email: req.user.email,
             subject: 'ParkingLK Booking Cancelled',
@@ -346,7 +337,7 @@ export const checkInBooking = async (req, res) => {
             return res.status(404).json({ message: 'Booking not found' });
         }
 
-        // --- Role-Based Access Control ---
+
         const carPark = await CarPark.findById(booking.car_park);
         if (req.user.role !== 'super_admin') {
             if (req.user.role === 'car_owner' && carPark.owner.toString() !== req.user._id.toString()) {
@@ -359,7 +350,7 @@ export const checkInBooking = async (req, res) => {
                 return res.status(403).json({ message: 'Not authorized: Users cannot manually check-in.' });
             }
         }
-        // ---------------------------------
+
 
         if (booking.booking_status === 'cancelled' || booking.booking_status === 'cancelled_noshow') {
             return res.status(400).json({ message: 'Booking is already cancelled' });
@@ -371,7 +362,7 @@ export const checkInBooking = async (req, res) => {
 
         const now = new Date();
         const startTime = new Date(booking.start_time);
-        const lateThreshold = new Date(startTime.getTime() + 30 * 60000); // 30 mins late
+        const lateThreshold = new Date(startTime.getTime() + 30 * 60000);
 
         if (now > lateThreshold) {
             booking.booking_status = 'cancelled_noshow';
@@ -387,26 +378,25 @@ export const checkInBooking = async (req, res) => {
 
         booking.booking_status = 'active';
 
-        // Handle early check in: charge extra if they arrive > 10 minutes early
         let earlyArrivalCharge = 0;
         let earlyArrivalMins = 0;
         if (now < startTime) {
             const earlyMs = startTime - now;
             earlyArrivalMins = Math.floor(earlyMs / (1000 * 60));
-            // Only charge if they are more than 10 mins early
+
             if (earlyArrivalMins > 10) {
-                // Charge proportional rate per 10 minutes of early arrival
+
                 const early10MinBlocks = Math.ceil(earlyArrivalMins / 10);
                 const hourlyRate = carPark ? (carPark.price_per_hour || 60) : 60;
                 earlyArrivalCharge = Math.round(early10MinBlocks * (hourlyRate / 6));
 
-                // Add to extra_charges & extra_charges_time immediately
-                // Or we can add it directly to total_amount
+
+
                 booking.extra_charges += earlyArrivalCharge;
                 booking.extra_charges_time += earlyArrivalMins;
                 booking.total_amount += earlyArrivalCharge;
             }
-            // Start the actual parking time from now so that standard end_time calculation remains intact
+
             booking.start_time = now;
         }
 
@@ -418,7 +408,7 @@ export const checkInBooking = async (req, res) => {
             await slot.save();
         }
 
-        // Notify user via Socket.io
+
         io.to(booking.user.toString()).emit('bookingUpdated', {
             bookingId: booking._id,
             status: booking.booking_status
@@ -452,7 +442,7 @@ export const extendBooking = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to extend this booking' });
         }
 
-        // Only active bookings can be extended
+
         if (booking.booking_status !== 'active') {
             return res.status(400).json({ message: 'Only active bookings can be extended' });
         }
@@ -461,7 +451,7 @@ export const extendBooking = async (req, res) => {
         const extensionMs = extension_duration_hours * 60 * 60 * 1000;
         const newEndTime = new Date(currentEndTime.getTime() + extensionMs);
 
-        // Check for collisions with other bookings for the same slot
+
         const collidingBooking = await Booking.findOne({
             slot: booking.slot,
             _id: { $ne: booking._id },
@@ -476,7 +466,7 @@ export const extendBooking = async (req, res) => {
             });
         }
 
-        // Calculate extra fee
+
         let extraFee = 0;
         if (booking.car_park && booking.car_park.price_per_hour) {
             extraFee = extension_duration_hours * booking.car_park.price_per_hour;
@@ -509,7 +499,6 @@ export const checkOutBooking = async (req, res) => {
             return res.status(404).json({ message: 'Booking not found' });
         }
 
-        // --- Role-Based Access Control ---
         const carPark = await CarPark.findById(booking.car_park);
         if (req.user.role !== 'super_admin') {
             if (req.user.role === 'car_owner' && carPark.owner.toString() !== req.user._id.toString()) {
@@ -518,12 +507,11 @@ export const checkOutBooking = async (req, res) => {
             if (req.user.role === 'attendant' && !carPark.attendants.includes(req.user._id)) {
                 return res.status(403).json({ message: 'Not authorized: You are not assigned to this car park.' });
             }
-            // Allow users to check themselves out manually from the app
+
             if (req.user.role === 'user' && booking.user.toString() !== req.user._id.toString()) {
                 return res.status(403).json({ message: 'Not authorized: You can only checkout your own bookings.' });
             }
         }
-        // ---------------------------------
 
         if (booking.booking_status !== 'active') {
             return res.status(400).json({ message: 'Only active bookings can be checked out' });
@@ -532,7 +520,7 @@ export const checkOutBooking = async (req, res) => {
         const now = new Date();
         const endTime = new Date(booking.end_time);
 
-        // Calculate penalty if checkout is after end_time
+
         let extraCharges = 0;
         let extraTimeMinutes = 0;
         if (now > endTime) {
@@ -560,14 +548,14 @@ export const checkOutBooking = async (req, res) => {
 
         await booking.save();
 
-        // Free up the slot
+
         const slot = await ParkingSlot.findById(booking.slot);
         if (slot) {
             slot.status = 'available';
             await slot.save();
         }
 
-        // Notify user via Socket.io
+
         io.to(booking.user.toString()).emit('bookingUpdated', {
             bookingId: booking._id,
             status: booking.booking_status,
@@ -598,7 +586,7 @@ export const getBookingById = async (req, res) => {
             .populate('slot', 'slot_number type status');
 
         if (booking) {
-            // Calculate pending extra charges if booking is active and past end time
+
             let pendingExtraCharges = 0;
             let pendingExtraTimeMinutes = 0;
 
@@ -616,10 +604,10 @@ export const getBookingById = async (req, res) => {
                 }
             }
 
-            // Convert to object so we can add arbitrary fields
+
             const bookingObj = booking.toObject();
 
-            // Retroactively calculate for older completed bookings without extra_charges_time
+
             if (bookingObj.booking_status === 'completed' && bookingObj.extra_charges > 0 && !bookingObj.extra_charges_time && bookingObj.actual_exit_time) {
                 const extraTimeMs = new Date(bookingObj.actual_exit_time) - new Date(bookingObj.end_time);
                 bookingObj.extra_charges_time = Math.floor(extraTimeMs / (1000 * 60));
@@ -648,19 +636,19 @@ export const payBooking = async (req, res) => {
             return res.status(404).json({ message: 'Booking not found' });
         }
 
-        // Verify user owns the booking or is admin
+
         if (booking.user.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
             return res.status(403).json({ message: 'Not authorized to pay for this booking' });
         }
 
         booking.isPaid = true;
         booking.payment_status = 'completed';
-        booking.payment_id = req.body.id; // The PayPal order ID
+        booking.payment_id = req.body.id;
         booking.payment_method = 'PayPal';
 
         const updatedBooking = await booking.save();
 
-        // Populate and return
+
         const populatedBooking = await Booking.findById(updatedBooking._id)
             .populate('car_park', 'name address')
             .populate('slot', 'slot_number');
@@ -688,8 +676,6 @@ export const payExtraCharges = async (req, res) => {
         }
 
         booking.extra_charges_paid = true;
-        // Optionally store another payment ID context if we added a field for it, 
-        // for now just marking the boolean flag is sufficient for the MVP flow.
 
         const updatedBooking = await booking.save();
 
